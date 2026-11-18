@@ -1,0 +1,53 @@
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-seguridad
+  namespace: tesis-devsecops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-seguridad
+  template:
+    metadata:
+      labels:
+        app: api-seguridad
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - name: api-seguridad
+          image: api-seguridad:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 185
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          startupProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /q/health/live
+              port: 8080
+            periodSeconds: 15
