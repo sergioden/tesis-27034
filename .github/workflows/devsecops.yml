@@ -1,0 +1,86 @@
+name: Tesis - Pipeline DevSecOps ISO 27034
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar-y-empaquetar:
+    name: Verificar controles y preparar imagen
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Obtener código
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Configurar Java 21 y Maven
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: 'ASC-01 | Compilación y pruebas'
+        run: mvn -B clean verify
+
+      - name: 'ASC-04 | Análisis estático Java con Semgrep'
+        run: |
+          docker run --rm \
+            -v "$PWD:/src:ro" -w /src \
+            semgrep/semgrep:latest \
+            semgrep scan --config p/java --severity ERROR \
+            --error --metrics=off src/main/java
+
+      - name: 'ASC-05 | Detección de secretos con Gitleaks'
+        run: |
+          docker run --rm \
+            -v "$PWD:/src:ro" -w /src \
+            ghcr.io/gitleaks/gitleaks:v8.30.1 \
+            dir --no-banner --redact --exit-code 1 /src
+
+      - name: 'ASC-03 | Seguridad de manifiestos Kubernetes'
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: config
+          scan-ref: ./k8s
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+
+      - name: Construir imagen Docker
+        run: |
+          docker build \
+            -f src/main/docker/Dockerfile.jvm \
+            -t "api-seguridad:${GITHUB_SHA}" .
+
+      - name: 'ASC-02 | Vulnerabilidades de imagen Docker'
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: 'api-seguridad:${{ github.sha }}'
+          scanners: vuln
+          format: table
+          exit-code: '1'
+          severity: HIGH,CRITICAL
+
+      - name: Preparar imagen aprobada y comprobante SHA-256
+        run: |
+          mkdir -p dist
+          docker save "api-seguridad:${GITHUB_SHA}" -o dist/api-seguridad.tar
+          (cd dist && sha256sum api-seguridad.tar > api-seguridad.tar.sha256)
+          printf '%s\n' "$GITHUB_SHA" > dist/COMMIT.txt
+
+      - name: Publicar artefacto para promoción controlada
+        uses: actions/upload-artifact@v6
+        with:
+          name: imagen-aprobada-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
