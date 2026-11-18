@@ -1,0 +1,93 @@
+# --------------------------------------------------------------
+# Tesis - API Seguridad (Java 21 / Quarkus / Maven / IntelliJ)
+# --------------------------------------------------------------
+
+# Maven / Quarkus: archivos generados
+/target/
+**/target/
+/build/
+.quarkus/
+*.class
+*.log
+hs_err_pid*
+replay_pid*
+
+# IDE y herramientas de desarrollo
+.idea/
+*.iml
+.vscode/
+.fleet/
+.project
+.classpath
+.settings/
+.factorypath
+
+# Sistema operativo / temporales
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+*.tmp
+*.bak
+*.orig
+
+# Configuración local, credenciales y secretos
+.env
+.env.*
+!.env.example
+!.env.sample
+*.env
+*.env.local
+secrets/
+.secrets/
+**/secrets.yaml
+**/secrets.yml
+**/*-secret.yaml
+**/*-secret.yml
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa
+id_ed25519
+kubeconfig
+kubeconfig-*
+*.kubeconfig
+.kube/
+.docker/
+credentials.json
+service-account*.json
+service_account*.json
+*.token
+
+# Evidencia local y resultados de análisis
+/evidencias/
+/dependencias.txt
+*.sarif
+
+# Imágenes exportadas, backups y archivos comprimidos
+*.tar
+*.tar.gz
+*.tgz
+*.zip
+*.7z
+*.rar
+*.bak.zip
+/local-dumps/
+*.sql.gz
+*.db
+*.sqlite
+*.sqlite3
+
+# Archivos locales de prueba o de credenciales de Maven
+.m2/
+settings-local.xml
+
+# IMPORTANTE: mantener versionados los archivos del proyecto:
+# pom.xml, mvnw, .mvn/wrapper/, src/, k8s/,
+# .github/workflows/ y Dockerfile(s).
+# src/main/resources/application.properties también se versiona
+# SOLO si no contiene contraseñas, tokens ni datos privados.
