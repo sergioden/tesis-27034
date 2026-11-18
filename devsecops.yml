@@ -2,7 +2,7 @@ name: Tesis - Pipeline DevSecOps ISO 27034
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   workflow_dispatch:
 
 permissions:
